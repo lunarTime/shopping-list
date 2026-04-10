@@ -5,7 +5,6 @@ import type { TabsProps } from 'antd';
 interface BottomTabBarProps {
     activeTab: string;
     onChange: (key: string) => void;
-    children: Record<string, React.ReactNode>;
 }
 
 export const BottomTabBar = ({ activeTab, onChange }: BottomTabBarProps) => {

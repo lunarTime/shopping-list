@@ -178,7 +178,7 @@ export const ShoppingListWidget = () => {
                 )}
             </Modal>
 
-            <BottomTabBar activeTab={activeTab} onChange={setActiveTab} children={undefined} />
+            <BottomTabBar activeTab={activeTab} onChange={setActiveTab} />
         </div>
     );
 };
