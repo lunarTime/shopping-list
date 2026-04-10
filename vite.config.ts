@@ -3,20 +3,18 @@ import react from '@vitejs/plugin-react'
 import path from 'path'
 import { VitePWA } from 'vite-plugin-pwa'
 
-// https://vite.dev/config/
 export default defineConfig({
   base: '/shopping-list/',
   plugins: [
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'icons.svg'],
+      includeAssets: ['favicon.svg'],
       manifest: {
         name: 'Shopping List',
         short_name: 'Shopping List',
         description: 'Shopping List based on React and Ant Design',
-        theme_color: '#1890ff',
-        background_color: '#f8fafc',
+        theme_color: '#fb7f3c',
         display: 'standalone',
         icons: [
           {
