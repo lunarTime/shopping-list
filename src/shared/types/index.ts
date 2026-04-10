@@ -1,1 +1,1 @@
-export type * from './item';
+export * from './item';
