@@ -11,10 +11,12 @@ import {
     theme,
 } from 'antd';
 import { useState } from 'react';
-import { useLocalStorage } from '@shared/lib/hooks';
+import { useLocalStorage, calculateItemTotal } from '@shared/lib/hooks';
 import type { ShoppingItem, ShoppingItemFormValues } from '@shared/types';
 import { ShoppingItemCard } from '@entities/shopping-item';
 import { AddItemForm } from '@features/add-item';
+import { WeightCalculator } from '@features/weight-calculator';
+import { BottomTabBar } from '@shared/ui/BottomTabBar';
 import { DollarOutlined, ShoppingCartOutlined } from '@ant-design/icons';
 import { ThemeSwitcher } from '@shared/ui/ThemeSwitcher';
 
@@ -24,6 +26,7 @@ export const ShoppingListWidget = () => {
     const { token } = theme.useToken();
     const [items, setItems] = useLocalStorage<ShoppingItem[]>('shopping-list', []);
     const [editingItem, setEditingItem] = useState<ShoppingItem | null>(null);
+    const [activeTab, setActiveTab] = useState<string>('shopping-list');
     const { message } = AntApp.useApp();
 
     const handleAddItem = (newItem: ShoppingItemFormValues) => {
@@ -66,10 +69,34 @@ export const ShoppingListWidget = () => {
         message.info('Товар удален');
     };
 
-    const totalPrice = items.reduce((acc, item) => {
-        if (!item.price) return acc;
+    const handleAddFromWeightCalculator = (item: {
+        title: string;
+        quantity: number;
+        unit: 'гр';
+        price: number;
+        priceMode: 'per_unit';
+        comment?: string;
+    }) => {
+        const generateId = () => {
+            if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+                return crypto.randomUUID();
+            }
 
-        const itemTotal = item.priceMode === 'total' ? item.price : item.price * item.quantity;
+            return Math.random().toString(36).substring(2, 11) + Date.now().toString(36);
+        };
+
+        const newItem: ShoppingItem = {
+            ...item,
+            id: generateId(),
+            done: false,
+        };
+
+        setItems((prev) => [newItem, ...prev]);
+        message.success('Товар добавлен');
+    };
+
+    const totalPrice = items.reduce((acc, item) => {
+        const itemTotal = calculateItemTotal(item.price, item.quantity, item.unit, item.priceMode);
 
         return acc + itemTotal;
     }, 0);
@@ -77,7 +104,7 @@ export const ShoppingListWidget = () => {
     const completedCount = items.filter((item) => item.done).length;
 
     return (
-        <div style={{ maxWidth: 600, margin: '0 auto', padding: '40px 20px' }}>
+        <div style={{ maxWidth: 600, margin: '0 auto', padding: '40px 20px 100px' }}>
             <header style={{ textAlign: 'center', marginBottom: 40 }}>
                 <Space size={12} align="center">
                     <ShoppingCartOutlined style={{ fontSize: 24, color: token.colorPrimary }} />
@@ -88,47 +115,55 @@ export const ShoppingListWidget = () => {
                 </Space>
             </header>
 
-            <AddItemForm onAdd={handleAddItem} />
+            {activeTab === 'shopping-list' && (
+                <>
+                    <AddItemForm onAdd={handleAddItem} />
 
-            {items.length > 0 && (
-                <Row gutter={16} style={{ marginBottom: 24 }}>
-                    <Col span={12}>
-                        <Card style={{ borderRadius: 16 }}>
-                            <Statistic
-                                title="Итого"
-                                value={totalPrice}
-                                precision={2}
-                                prefix={<DollarOutlined />}
-                                suffix="₽"
-                            />
-                        </Card>
-                    </Col>
-                    <Col span={12}>
-                        <Card style={{ borderRadius: 16 }}>
-                            <Statistic
-                                title="Куплено"
-                                value={completedCount}
-                                suffix={`/ ${items.length}`}
-                            />
-                        </Card>
-                    </Col>
-                </Row>
+                    {items.length > 0 && (
+                        <Row gutter={16} style={{ marginBottom: 24 }}>
+                            <Col span={12}>
+                                <Card style={{ borderRadius: 16 }}>
+                                    <Statistic
+                                        title="Итого"
+                                        value={totalPrice}
+                                        precision={2}
+                                        prefix={<DollarOutlined />}
+                                        suffix="₽"
+                                    />
+                                </Card>
+                            </Col>
+                            <Col span={12}>
+                                <Card style={{ borderRadius: 16 }}>
+                                    <Statistic
+                                        title="Куплено"
+                                        value={completedCount}
+                                        suffix={`/ ${items.length}`}
+                                    />
+                                </Card>
+                            </Col>
+                        </Row>
+                    )}
+
+                    {items.length === 0 ? (
+                        <Empty description="Список пуст" style={{ marginTop: 40 }} />
+                    ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                            {items.map((item) => (
+                                <ShoppingItemCard
+                                    key={item.id}
+                                    item={item}
+                                    onToggle={handleToggleItem}
+                                    onDelete={handleDeleteItem}
+                                    onEdit={setEditingItem}
+                                />
+                            ))}
+                        </div>
+                    )}
+                </>
             )}
 
-            {items.length === 0 ? (
-                <Empty description="Список пуст" style={{ marginTop: 40 }} />
-            ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                    {items.map((item) => (
-                        <ShoppingItemCard
-                            key={item.id}
-                            item={item}
-                            onToggle={handleToggleItem}
-                            onDelete={handleDeleteItem}
-                            onEdit={setEditingItem}
-                        />
-                    ))}
-                </div>
+            {activeTab === 'weight-calculator' && (
+                <WeightCalculator onAddToShoppingList={handleAddFromWeightCalculator} />
             )}
 
             <Modal
@@ -142,6 +177,8 @@ export const ShoppingListWidget = () => {
                     <AddItemForm onAdd={handleUpdateItem} initialValues={editingItem} isEditing />
                 )}
             </Modal>
+
+            <BottomTabBar activeTab={activeTab} onChange={setActiveTab} children={undefined} />
         </div>
     );
 };
