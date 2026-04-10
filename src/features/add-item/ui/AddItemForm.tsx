@@ -1,7 +1,15 @@
-import { Form, Input, InputNumber, Button, Select, Space, Radio, theme } from 'antd';
+import { Form, Input, InputNumber, Button, Select, Space, Radio, Typography, theme } from 'antd';
 import { PlusOutlined, SaveOutlined } from '@ant-design/icons';
 import { type ShoppingItem, type ShoppingItemFormValues, UNITS } from '@shared/types';
+import {
+    calculateItemTotal,
+    getQuantityConstraints,
+    getPriceLabel,
+    getBaseUnit,
+} from '@shared/lib/hooks';
 import { useEffect } from 'react';
+
+const { Text } = Typography;
 
 interface AddItemFormProps {
     onAdd: (item: ShoppingItemFormValues) => void;
@@ -12,6 +20,15 @@ interface AddItemFormProps {
 export const AddItemForm = ({ onAdd, initialValues, isEditing }: AddItemFormProps) => {
     const [form] = Form.useForm<ShoppingItemFormValues>();
     const { token } = theme.useToken();
+
+    const quantity = Form.useWatch('quantity', form);
+    const unit = Form.useWatch('unit', form) || 'шт';
+    const price = Form.useWatch('price', form);
+    const priceMode = Form.useWatch('priceMode', form) || 'per_unit';
+
+    const constraints = getQuantityConstraints(unit);
+    const previewTotal = calculateItemTotal(price, quantity || 0, unit, priceMode);
+    const priceLabel = getPriceLabel(unit, priceMode);
 
     useEffect(() => {
         if (initialValues) {
@@ -61,11 +78,16 @@ export const AddItemForm = ({ onAdd, initialValues, isEditing }: AddItemFormProp
                     label="Кол-во"
                     rules={[{ required: true, message: 'Укажите кол-во' }]}
                 >
-                    <InputNumber min={0.01} precision={2} style={{ width: 100 }} />
+                    <InputNumber
+                        min={constraints.min}
+                        precision={constraints.precision}
+                        step={constraints.step}
+                        style={{ width: 100 }}
+                    />
                 </Form.Item>
 
                 <Form.Item name="unit" label="Ед. изм.">
-                    <Select style={{ width: 80 }}>
+                    <Select style={{ width: 80 }} placeholder="ед.">
                         {UNITS.map((u) => (
                             <Select.Option key={u} value={u}>
                                 {u}
@@ -74,17 +96,39 @@ export const AddItemForm = ({ onAdd, initialValues, isEditing }: AddItemFormProp
                     </Select>
                 </Form.Item>
 
-                <Form.Item name="price" label="Цена (₽)">
+                <Form.Item
+                    name="price"
+                    label={`Цена (₽) ${priceMode === 'per_unit' ? priceLabel : ''}`}
+                >
                     <InputNumber min={0} precision={2} style={{ width: 120 }} placeholder="0.00" />
                 </Form.Item>
 
                 <Form.Item name="priceMode" label="Расчет цены">
                     <Radio.Group optionType="button" buttonStyle="solid">
-                        <Radio.Button value="per_unit">За ед.</Radio.Button>
+                        <Radio.Button value="per_unit">За {getBaseUnit(unit)}</Radio.Button>
                         <Radio.Button value="total">За всё</Radio.Button>
                     </Radio.Group>
                 </Form.Item>
             </Space>
+
+            {price && price > 0 && priceMode === 'per_unit' && (
+                <div
+                    style={{
+                        padding: '8px 12px',
+                        background: token.colorFillAlter,
+                        borderRadius: 8,
+                        marginBottom: 16,
+                        fontSize: 13,
+                    }}
+                >
+                    <Text type="secondary">
+                        {quantity || 0} {unit} × {price} ₽ {priceLabel} ={' '}
+                        <strong style={{ color: token.colorPrimary }}>
+                            {previewTotal.toFixed(2)} ₽
+                        </strong>
+                    </Text>
+                </div>
+            )}
 
             <Form.Item name="comment" label="Комментарий">
                 <Input.TextArea
