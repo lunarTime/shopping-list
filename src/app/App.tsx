@@ -5,32 +5,32 @@ import { ThemeProvider, useTheme } from '@shared/lib/theme-context';
 import './App.css';
 
 function AppContent() {
-  const { theme } = useTheme();
+    const { theme } = useTheme();
 
-  return (
-    <ConfigProvider
-      locale={ruRU}
-      theme={{
-        algorithm: theme === 'dark' ? antTheme.darkAlgorithm : antTheme.defaultAlgorithm,
-        token: {
-          colorPrimary: '#fb7f3c',
-          borderRadius: 12,
-        },
-      }}
-    >
-      <AntApp>
-        <HomePage />
-      </AntApp>
-    </ConfigProvider>
-  );
+    return (
+        <ConfigProvider
+            locale={ruRU}
+            theme={{
+                algorithm: theme === 'dark' ? antTheme.darkAlgorithm : antTheme.defaultAlgorithm,
+                token: {
+                    colorPrimary: '#fb7f3c',
+                    borderRadius: 12,
+                },
+            }}
+        >
+            <AntApp>
+                <HomePage />
+            </AntApp>
+        </ConfigProvider>
+    );
 }
 
 function App() {
-  return (
-    <ThemeProvider>
-      <AppContent />
-    </ThemeProvider>
-  );
+    return (
+        <ThemeProvider>
+            <AppContent />
+        </ThemeProvider>
+    );
 }
 
 export default App;
