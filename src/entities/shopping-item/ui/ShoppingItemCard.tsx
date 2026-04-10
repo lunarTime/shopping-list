@@ -1,6 +1,7 @@
 import { Card, Checkbox, Button, Space, Typography, Tag, theme } from 'antd';
 import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import type { ShoppingItem } from '@shared/types';
+import { calculateItemTotal, getPriceLabel, formatQuantityInBaseUnit } from '@shared/lib/hooks';
 import type { MouseEvent } from 'react';
 
 const { Text } = Typography;
@@ -15,13 +16,7 @@ interface ShoppingItemCardProps {
 export const ShoppingItemCard = ({ item, onToggle, onDelete, onEdit }: ShoppingItemCardProps) => {
     const { token } = theme.useToken();
 
-    const calculateTotal = () => {
-        if (!item.price) return 0;
-
-        return item.priceMode === 'total' ? item.price : item.price * item.quantity;
-    };
-
-    const totalPrice = calculateTotal();
+    const totalPrice = calculateItemTotal(item.price, item.quantity, item.unit, item.priceMode);
 
     const handleToggle = () => {
         onToggle(item.id);
@@ -57,14 +52,7 @@ export const ShoppingItemCard = ({ item, onToggle, onDelete, onEdit }: ShoppingI
         >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <Space size="middle" style={{ flex: 1 }}>
-                    <Checkbox
-                        checked={item.done}
-                        onChange={(e) => {
-                            // Предотвращаем двойной клик, так как Card тоже имеет onClick
-                            e.stopPropagation();
-                            handleToggle();
-                        }}
-                    />
+                    <Checkbox checked={item.done} onChange={() => handleToggle()} />
                     <div style={{ flex: 1 }}>
                         <Text
                             delete={item.done}
@@ -77,9 +65,9 @@ export const ShoppingItemCard = ({ item, onToggle, onDelete, onEdit }: ShoppingI
                             {item.title}
                         </Text>
                         <div style={{ fontSize: 13, color: token.colorTextDescription }}>
-                            {item.quantity} {item.unit}
+                            {formatQuantityInBaseUnit(item.quantity, item.unit)}
                             {item.price
-                                ? ` × ${item.price} ₽ ${item.priceMode === 'per_unit' ? '/ ед.' : '(всего)'}`
+                                ? ` × ${item.price} ₽ ${getPriceLabel(item.unit, item.priceMode)}`
                                 : ''}
                             {item.price ? (
                                 <strong style={{ marginLeft: 8, color: token.colorPrimary }}>
