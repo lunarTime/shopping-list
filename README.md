@@ -1,73 +1,42 @@
-# React + TypeScript + Vite
+# Гайд по работе с приложением для расчета покупок
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Проект представляет собой приложение на React (Vite) с использованием архитектуры FSD (Feature-Sliced Design) и дизайном на основе библиотеки компонентов Ant Design.
 
-Currently, two official plugins are available:
+## Быстрый запуск
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+1. **Установка зависимостей:**
 
-## React Compiler
+    ```bash
+    npm install
+    ```
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+2. **Запуск в режиме разработки:**
 
-## Expanding the ESLint configuration
+    ```bash
+    npm run dev
+    ```
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+    Приложение будет доступно по адресу `http://localhost:5173/shopping-list/`.
 
-```js
-export default defineConfig([
-    globalIgnores(['dist']),
-    {
-        files: ['**/*.{ts,tsx}'],
-        extends: [
-            // Other configs...
+3. **Сборка проекта:**
+    ```bash
+    npm run build
+    ```
 
-            // Remove tseslint.configs.recommended and replace with this
-            tseslint.configs.recommendedTypeChecked,
-            // Alternatively, use this for stricter rules
-            tseslint.configs.strictTypeChecked,
-            // Optionally, add this for stylistic rules
-            tseslint.configs.stylisticTypeChecked,
+## Основные компоненты (FSD Layers)
 
-            // Other configs...
-        ],
-        languageOptions: {
-            parserOptions: {
-                project: ['./tsconfig.node.json', './tsconfig.app.json'],
-                tsconfigRootDir: import.meta.dirname,
-            },
-            // other options...
-        },
-    },
-]);
-```
+- **`app/`**: инициализация приложения, глобальные стили и провайдеры (ThemeContext).
+- **`pages/`**: страница `HomePage` - точка входа пользователя.
+- **`widgets/`**: `ShoppingListWidget` - объединяет список покупок и логику управления ими.
+- **`features/`**:
+    - `add-item`: форма добавления нового товара.
+    - `weight-calculator`: логика расчета веса/цены.
+- **`entities/`**: `shopping-item` - карточка товара и бизнес-логика сущности.
+- **`shared/`**: UI-кит (кнопки, табы), типы и переиспользуемые хуки (`useLocalStorage`).
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Как пользоваться
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x';
-import reactDom from 'eslint-plugin-react-dom';
-
-export default defineConfig([
-    globalIgnores(['dist']),
-    {
-        files: ['**/*.{ts,tsx}'],
-        extends: [
-            // Other configs...
-            // Enable lint rules for React
-            reactX.configs['recommended-typescript'],
-            // Enable lint rules for React DOM
-            reactDom.configs.recommended,
-        ],
-        languageOptions: {
-            parserOptions: {
-                project: ['./tsconfig.node.json', './tsconfig.app.json'],
-                tsconfigRootDir: import.meta.dirname,
-            },
-            // other options...
-        },
-    },
-]);
-```
+1. **Добавление товара**: используйте форму в верхней части списка.
+2. **Управление списком**: товары сохраняются в `localStorage`, поэтому данные не пропадут при перезагрузке.
+3. **Расчет**: приложение помогает быстро рассчитать вес или стоимость позиций.
+4. **Смена темы**: используйте переключатель тем в интерфейсе на светлую или тёмную.
